@@ -1,6 +1,7 @@
 package es.us.clases;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
 
 import ca.uhn.hl7v2.DefaultHapiContext;
@@ -10,9 +11,12 @@ import ca.uhn.hl7v2.app.Connection;
 import ca.uhn.hl7v2.app.ConnectionListener;
 import ca.uhn.hl7v2.app.HL7Service;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.model.v24.message.ORU_R01;
+import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.protocol.ReceivingApplication;
 import ca.uhn.hl7v2.protocol.ReceivingApplicationException;
 import ca.uhn.hl7v2.protocol.ReceivingApplicationExceptionHandler;
+import es.us.data.MessageORU;
 
 
 public class BusStart {
@@ -74,27 +78,48 @@ public class BusStart {
 	          }
 	          
 	        
-	      	public Message processMessage(Message theMessage, Map<String, Object> theMetadata) throws ReceivingApplicationException, HL7Exception {
+	      	@SuppressWarnings("resource")
+			public Message processMessage(Message theMessage, Map<String, Object> theMetadata) throws ReceivingApplicationException, HL7Exception {
+
+				String encodedMessage = new DefaultHapiContext().getPipeParser().encode(theMessage);
+				System.out.println("Received message:\n" + encodedMessage + "\n");
+	
+				// TRATAMIENTO DEL MENSAJE AQUÍ
+				// ParseMessage & inside, insert into database
+				HapiContext context = new DefaultHapiContext();
+				Parser p = context.getGenericParser();
+				Message hapiMsg = null;
+				// Usamos el parseador
+				try {
+					hapiMsg = p.parse(encodedMessage);
+				} catch (HL7Exception e) {
+					System.err.println("No se ha podido parsear el mensaje: "
+							+ e.getMessage());
+				}
+	
+				// Comprobamos que sea un ORU_R01
+				if (encodedMessage.contains("ORU_R01")) {
+					// Entonces ya podemos parsearlo con su paseador propio
+					ORU_R01 oruMsg = (ORU_R01) hapiMsg;
+					try {
+						Persist.escribeEnBD(new MessageORU(oruMsg)); //Llamamos al método para que lo introduzca en la base de datos
+						System.out.println("Se ha introducido correctamente el mensaje \n");
+					} catch (NumberFormatException | SQLException e) {
+						System.err.println("No se ha podido introducir en la base de datos el mensaje: "
+								+ e.getMessage());
+					}
+				}
+	
+				// Enviar el ACK generado automáticamente
+				try {
+					return theMessage.generateACK();
+				} catch (IOException e) {
+					throw new HL7Exception(e);
+				}
+
+	      	}
 	      
-	              String encodedMessage = new DefaultHapiContext().getPipeParser().encode(theMessage);
-	              System.out.println("Received message:\n" + encodedMessage + "\n\n");
-	              
-	              
-	              //TRATAMIENTO DEL MENSAJE AQUÍ
-	              
-	              //ParseMessage & inside, insert into database
-	              
-	              
-	              //Enviar el ACK generado automáticamente
-	              try {
-	              	return theMessage.generateACK();
-	              } catch (IOException e) {
-	                  throw new HL7Exception(e);
-	              }
-	      
-	          }
-	      
-	      }
+      }
 	    
 	    	    
 	     

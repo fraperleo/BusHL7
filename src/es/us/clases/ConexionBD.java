@@ -14,7 +14,6 @@ public class ConexionBD {
     // Ruta del servidor.
     private static String server = "jdbc:mysql://localhost/" + bd;
 
-
     public static void conectar() {
         try {
             Class.forName(driver);
