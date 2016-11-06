@@ -40,7 +40,7 @@ public class Persist {
         List<SegmentOBX> obxs = orumsg.getObx();
         obxs.forEach(obx -> {
         	String cadena2;
-        	cadena2 = "INSERT INTO `obx`(`IdTipo`, `Tipo`, `Valor`, `Unidad`, `IdMSH`) VALUES ('" + obx.getIdTipo() + "','" + obx.getTipo() + "','" + obx.getValor() + "','" + obx.getUnidad() + "'," + IdMSH +")";
+        	cadena2 = "INSERT INTO `obx`(`IdTipo`, `Tipo`, `Valor`, `Unidad`, `IdMSH`) VALUES ('" + obx.getIdTipo() + "','" + obx.getTipo() + "','" + obx.getValor() + "','" + obx.getUnidad() + "','" + IdMSH +"')";
             ConexionBD.consultaActualiza(st, cadena2);            	
         });
             
@@ -67,7 +67,7 @@ public class Persist {
 	
 	private static Integer getMaxIdMSH(Statement st) throws NumberFormatException, SQLException {
 		Integer ret = null; // Id MSH
-		String consulta = "SELECT MAX(`Identificador`) FROM paciente";
+		String consulta = "SELECT MAX(`IdMSH`) FROM msh";
 		ResultSet rs = null;
 		rs = ConexionBD.consultaQuery(st, consulta);
 
